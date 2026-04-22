@@ -1,6 +1,6 @@
 cmake_minimum_required(VERSION 3.16)
 
-project(semaphore VERSION 0.1 LANGUAGES CXX)
+project(Traffic_light VERSION 0.1 LANGUAGES CXX)
 
 set(QT_USE_MAINTENANCE_TOOL OFF CACHE BOOL "" FORCE)
 set(QT_NO_PACKAGE_INSTALLER ON)

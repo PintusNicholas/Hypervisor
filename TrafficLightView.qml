@@ -1,9 +1,9 @@
 /**
  * @file TrafficLightView.qml
- * @brief User Interface for the Double Semaphore system.
+ * @brief User Interface for the Double Traffic Light system.
  * * This file implements a visual representation of two traffic lights:
- * - A "Local" semaphore controlled by an internal logic (Timer).
- * - A "Remote" semaphore controlled by external messages via the IMessageBus.
+ * - A "Local" TrafficLight controlled by an internal logic (Timer).
+ * - A "Remote" TrafficLight controlled by external messages via the IMessageBus.
  */
 
 import QtQuick
@@ -14,10 +14,10 @@ Window {
     width: 640
     height: 480
     visible: true
-    title: qsTr("Double Semaphore")
+    title: qsTr("Double Traffic Light")
 
-    property int localSemaphoreState: 0
-    property int remoteSemaphoreState: 0
+    property int localTrafficLightState: 0
+    property int remoteTrafficLightState: 0
 
     Rectangle {
         id: container
@@ -37,17 +37,17 @@ Window {
             // --- LOCAL SEMAPHORE ---
             Column {
                 spacing: 20
-                Rectangle { width: 80; height: 80; radius: 40; color: localSemaphoreState === 0 ? "red" : "darkred" }
-                Rectangle { width: 80; height: 80; radius: 40; color: localSemaphoreState === 1 ? "yellow" : "#666600" }
-                Rectangle { width: 80; height: 80; radius: 40; color: localSemaphoreState === 2 ? "green" : "darkgreen" }
+                Rectangle { width: 80; height: 80; radius: 40; color: localTrafficLightState === 0 ? "red" : "darkred" }
+                Rectangle { width: 80; height: 80; radius: 40; color: localTrafficLightState === 1 ? "yellow" : "#666600" }
+                Rectangle { width: 80; height: 80; radius: 40; color: localTrafficLightState === 2 ? "green" : "darkgreen" }
             }
 
             // --- REMOTE SEMAPHORE ---
             Column {
                 spacing: 20
-                Rectangle { width: 80; height: 80; radius: 40; color: remoteSemaphoreState === 0 ? "red" : "darkred" }
-                Rectangle { width: 80; height: 80; radius: 40; color: remoteSemaphoreState === 1 ? "yellow" : "#666600" }
-                Rectangle { width: 80; height: 80; radius: 40; color: remoteSemaphoreState === 2 ? "green" : "darkgreen" }
+                Rectangle { width: 80; height: 80; radius: 40; color: remoteTrafficLightState === 0 ? "red" : "darkred" }
+                Rectangle { width: 80; height: 80; radius: 40; color: remoteTrafficLightState === 1 ? "yellow" : "#666600" }
+                Rectangle { width: 80; height: 80; radius: 40; color: remoteTrafficLightState === 2 ? "green" : "darkgreen" }
             }
         }
     }
@@ -59,15 +59,15 @@ Window {
         repeat: true
 
         onTriggered: {
-            switch(localSemaphoreState) {
+            switch(localTrafficLightState) {
                 case 0:
-                    localSemaphoreState = 2; // red -> green
+                    localTrafficLightState = 2; // red -> green
                     break;
                 case 1:
-                    localSemaphoreState = 0; // yellow -> red
+                    localTrafficLightState = 0; // yellow -> red
                     break;
                 case 2:
-                    localSemaphoreState = 1; // green -> yellow
+                    localTrafficLightState = 1; // green -> yellow
                     break;
             }
         }
@@ -78,9 +78,9 @@ Window {
     * @return int Interval in milliseconds.
     */
     function getInterval() {
-        if (localSemaphoreState === 0) return 5000;
-        if (localSemaphoreState === 1) return 2000;
-        if (localSemaphoreState === 2) return 5000;
+        if (localTrafficLightState === 0) return 5000;
+        if (localTrafficLightState === 1) return 2000;
+        if (localTrafficLightState === 2) return 5000;
         return 1000;
     }
 
@@ -89,15 +89,15 @@ Window {
 
         /**
         * @handler onStateColorChanged
-        * @brief Updates the remote semaphore based on signals from the bus.
+        * @brief Updates the remote Traffic Light based on signals from the bus.
         * @param color String representing the new state ("red", "yellow", "green").
         */
         function onStateColorChanged(color) {
             console.log("Color received: " + color)
 
-            if(color === "green") remoteSemaphoreState = 2;
-            else if (color === "yellow") remoteSemaphoreState = 1;
-            else if (color === "red") remoteSemaphoreState = 0;
+            if(color === "green") remoteTrafficLightState = 2;
+            else if (color === "yellow") remoteTrafficLightState = 1;
+            else if (color === "red") remoteTrafficLightState = 0;
             else console.log(color + " is not a valid command")
         }
     }

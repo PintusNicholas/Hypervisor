@@ -1,6 +1,6 @@
 /**
  * @file main.cpp
- * @brief Main entry point for the Semaphore application.
+ * @brief Main entry point for the TrafficLight application.
  */
 
 #include <QGuiApplication>

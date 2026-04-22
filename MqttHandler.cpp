@@ -10,7 +10,7 @@
 /**
  * @brief Constructor that initializes the MQTT client and sets up connections.
  * * Configures the broker address, handles the connection logic, and sets up
- * the subscription to the remote semaphore topic. When a message is received
+ * the subscription to the remote TrafficLight topic. When a message is received
  * via MQTT, it is passed to the abstract receive() method.
  * * @param parent The parent QObject.
  */
