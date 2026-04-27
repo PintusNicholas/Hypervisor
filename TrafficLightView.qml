@@ -16,6 +16,16 @@ Window {
     visible: true
     title: qsTr("Double Traffic Light")
 
+    //MACROs
+    readonly property int green_light: 5000
+    readonly property int yellow_light: 2000
+    readonly property int red_light: 5000
+    readonly property int delay: 1000
+    readonly property int red_state: 0
+    readonly property int yellow_state: 1
+    readonly property int green_state: 2
+
+
     property int localTrafficLightState: 0
     property int remoteTrafficLightState: 0
 
@@ -34,26 +44,26 @@ Window {
             anchors.centerIn: parent
             spacing: 50
 
-            // --- LOCAL SEMAPHORE ---
+            // --- LOCAL TRAFFIC LIGHT ---
             Column {
                 spacing: 20
-                Rectangle { width: 80; height: 80; radius: 40; color: localTrafficLightState === 0 ? "red" : "darkred" }
-                Rectangle { width: 80; height: 80; radius: 40; color: localTrafficLightState === 1 ? "yellow" : "#666600" }
-                Rectangle { width: 80; height: 80; radius: 40; color: localTrafficLightState === 2 ? "green" : "darkgreen" }
+                Rectangle { width: 80; height: 80; radius: 40; color: localTrafficLightState === red_state ? "red" : "darkred" }
+                Rectangle { width: 80; height: 80; radius: 40; color: localTrafficLightState === yellow_state ? "yellow" : "#666600" }
+                Rectangle { width: 80; height: 80; radius: 40; color: localTrafficLightState === green_state ? "green" : "darkgreen" }
             }
 
-            // --- REMOTE SEMAPHORE ---
+            // --- REMOTE TRAFFIC LIGHT ---
             Column {
                 spacing: 20
-                Rectangle { width: 80; height: 80; radius: 40; color: remoteTrafficLightState === 0 ? "red" : "darkred" }
-                Rectangle { width: 80; height: 80; radius: 40; color: remoteTrafficLightState === 1 ? "yellow" : "#666600" }
-                Rectangle { width: 80; height: 80; radius: 40; color: remoteTrafficLightState === 2 ? "green" : "darkgreen" }
+                Rectangle { width: 80; height: 80; radius: 40; color: remoteTrafficLightState === red_state ? "red" : "darkred" }
+                Rectangle { width: 80; height: 80; radius: 40; color: remoteTrafficLightState === yellow_state ? "yellow" : "#666600" }
+                Rectangle { width: 80; height: 80; radius: 40; color: remoteTrafficLightState === green_state ? "green" : "darkgreen" }
             }
         }
     }
 
     Timer {
-        id: local_semaphore
+        id: local_traffic_light
         interval: getInterval();
         running: true
         repeat: true
@@ -61,13 +71,13 @@ Window {
         onTriggered: {
             switch(localTrafficLightState) {
                 case 0:
-                    localTrafficLightState = 2; // red -> green
+                    localTrafficLightState = green_state; // red -> green
                     break;
                 case 1:
-                    localTrafficLightState = 0; // yellow -> red
+                    localTrafficLightState = red_state; // yellow -> red
                     break;
                 case 2:
-                    localTrafficLightState = 1; // green -> yellow
+                    localTrafficLightState = yellow_state; // green -> yellow
                     break;
             }
         }
@@ -78,10 +88,10 @@ Window {
     * @return int Interval in milliseconds.
     */
     function getInterval() {
-        if (localTrafficLightState === 0) return 5000;
-        if (localTrafficLightState === 1) return 2000;
-        if (localTrafficLightState === 2) return 5000;
-        return 1000;
+        if (localTrafficLightState === 0) return red_light;
+        if (localTrafficLightState === 1) return yellow_light;
+        if (localTrafficLightState === 2) return green_light;
+        return delay;
     }
 
     Connections{
@@ -95,9 +105,9 @@ Window {
         function onStateColorChanged(color) {
             console.log("Color received: " + color)
 
-            if(color === "green") remoteTrafficLightState = 2;
-            else if (color === "yellow") remoteTrafficLightState = 1;
-            else if (color === "red") remoteTrafficLightState = 0;
+            if(color === "green") remoteTrafficLightState = green_state;
+            else if (color === "yellow") remoteTrafficLightState = yellow_state;
+            else if (color === "red") remoteTrafficLightState = red_state;
             else console.log(color + " is not a valid command")
         }
     }

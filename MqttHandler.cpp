@@ -7,6 +7,8 @@
 #include "IMessageBus.h"
 #include <QDebug>
 
+#define PORT 1883
+
 /**
  * @brief Constructor that initializes the MQTT client and sets up connections.
  * * Configures the broker address, handles the connection logic, and sets up
@@ -18,7 +20,7 @@ MqttHandler::MqttHandler(QObject *parent) : QObject(parent)
 {
     m_client = new QMqttClient(this);
     m_client->setHostname("broker.emqx.io");
-    m_client->setPort(1883);
+    m_client->setPort(PORT);
 
     connect(m_client, &QMqttClient::connected, this, [this]() {
         qDebug() << "Connected to Broker";
@@ -26,7 +28,7 @@ MqttHandler::MqttHandler(QObject *parent) : QObject(parent)
         auto sub = m_client->subscribe(QMqttTopicFilter("semaforo/remote/state"));
 
         if(!sub) {
-            qDebug() << "ERROR: Impossibile to connect to a topic";
+            qDebug() << "ERROR: Impossible to connect to a topic";
             return;
         }
 
