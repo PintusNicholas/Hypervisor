@@ -70,13 +70,13 @@ Window {
 
         onTriggered: {
             switch(localTrafficLightState) {
-                case 0:
+                case red_state:
                     localTrafficLightState = green_state; // red -> green
                     break;
-                case 1:
+                case yellow_state:
                     localTrafficLightState = red_state; // yellow -> red
                     break;
-                case 2:
+                case green_state:
                     localTrafficLightState = yellow_state; // green -> yellow
                     break;
             }
@@ -88,9 +88,9 @@ Window {
     * @return int Interval in milliseconds.
     */
     function getInterval() {
-        if (localTrafficLightState === 0) return red_light;
-        if (localTrafficLightState === 1) return yellow_light;
-        if (localTrafficLightState === 2) return green_light;
+        if (localTrafficLightState === red_state) return red_light;
+        if (localTrafficLightState === yellow_state) return yellow_light;
+        if (localTrafficLightState === green_state) return green_light;
         return delay;
     }
 
