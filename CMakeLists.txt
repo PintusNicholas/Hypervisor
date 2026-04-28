@@ -9,6 +9,7 @@ set(QT_NO_PACKAGE_VERSION_CHECK ON)
 find_package(Qt6 REQUIRED COMPONENTS
     Quick
     Core
+    Qml
     Network
     Mqtt
 )
@@ -28,6 +29,8 @@ qt_add_qml_module(appsemaphore
         MqttHandler.cpp
         MqttHandler.h
         SOURCES IMessageBus.h
+        SOURCES RPMsgHandler.h
+        SOURCES RPMsgHandler.cpp
 )
 
 # Qt for iOS sets MACOSX_BUNDLE_GUI_IDENTIFIER automatically since Qt 6.1.
@@ -44,6 +47,7 @@ set_target_properties(appsemaphore PROPERTIES
 target_link_libraries(appsemaphore PRIVATE
     Qt6::Quick
     Qt6::Core
+    Qt6::Qml
     Qt6::Network
     Qt6::Mqtt
 )
