@@ -29,6 +29,9 @@ Window {
     property int localTrafficLightState: 0
     property int remoteTrafficLightState: 0
 
+    property int localTimer: 5
+    property int remoteTimer: 0
+
     Rectangle {
         id: container
         anchors.centerIn: parent
@@ -47,6 +50,18 @@ Window {
             // --- LOCAL TRAFFIC LIGHT ---
             Column {
                 spacing: 20
+
+                Text {
+                    id: localTimerLabel
+                    text: localTimer
+                    color: "#FF4500"
+                    font.family: "Monospace"
+                    font.pixelSize: 30
+                    font.bold: true
+                    style: Text.Outline
+                    styleColor: "black"
+                }
+
                 Rectangle { width: 80; height: 80; radius: 40; color: localTrafficLightState === red_state ? "red" : "darkred" }
                 Rectangle { width: 80; height: 80; radius: 40; color: localTrafficLightState === yellow_state ? "yellow" : "#666600" }
                 Rectangle { width: 80; height: 80; radius: 40; color: localTrafficLightState === green_state ? "green" : "darkgreen" }
@@ -55,6 +70,18 @@ Window {
             // --- REMOTE TRAFFIC LIGHT ---
             Column {
                 spacing: 20
+
+                Text {
+                    id: remoteTimerLabel
+                    text: remoteTimer
+                    color: "#00FF00"
+                    font.family: "Monospace"
+                    font.pixelSize: 30
+                    font.bold: true
+                    style: Text.Outline
+                    styleColor: "black"
+                }
+
                 Rectangle { width: 80; height: 80; radius: 40; color: remoteTrafficLightState === red_state ? "red" : "darkred" }
                 Rectangle { width: 80; height: 80; radius: 40; color: remoteTrafficLightState === yellow_state ? "yellow" : "#666600" }
                 Rectangle { width: 80; height: 80; radius: 40; color: remoteTrafficLightState === green_state ? "green" : "darkgreen" }
@@ -80,7 +107,20 @@ Window {
                     localTrafficLightState = yellow_state; // green -> yellow
                     break;
             }
+            localTimer = getInterval() / 1000;
         }
+    }
+
+    Timer {
+        id: countdown_local
+        interval: 1000
+        running: true
+        repeat: true
+        onTriggered: {
+            if (localTimer > 0) localTimer--;
+            if (remoteTimer > 0) remoteTimer--;
+        }
+
     }
 
     /**
@@ -101,14 +141,18 @@ Window {
         * @handler onStateColorChanged
         * @brief Updates the remote Traffic Light based on signals from the bus.
         * @param color String representing the new state ("red", "yellow", "green").
+         @param time Int representing the time for the actual state
         */
-        function onStateColorChanged(color) {
+        function onStateColorChanged(color, time) {
             console.log("Color received: " + color)
+            console.log("Time received: " + time)
 
             if(color === "green") remoteTrafficLightState = green_state;
             else if (color === "yellow") remoteTrafficLightState = yellow_state;
             else if (color === "red") remoteTrafficLightState = red_state;
             else console.log(color + " is not a valid command")
+
+            remoteTimer = time;
         }
     }
 }
