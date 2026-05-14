@@ -1,161 +1,139 @@
-/**
- * @file TrafficLightView.qml
- * @brief User Interface for the Double Traffic Light system.
- * * This file implements a visual representation of two traffic lights:
- * - A "Local" TrafficLight controlled by an internal logic (Timer).
- * - A "Remote" TrafficLight controlled by external messages via the IMessageBus.
- */
-
 import QtQuick
 import QtQuick.Controls
 
 Window {
-    id: root
-    width: 640
-    height: 480
+    id: window
+    width: 1280
+    height: 720
     visible: true
-    title: qsTr("Double Traffic Light")
+    title: qsTr("Dashboard")
+    color: "#000000"
 
-    //MACROs
-    readonly property int green_light: 5000
-    readonly property int yellow_light: 2000
-    readonly property int red_light: 5000
-    readonly property int delay: 1000
-    readonly property int red_state: 0
-    readonly property int yellow_state: 1
-    readonly property int green_state: 2
+    property int oilTemperatureLED: 0
+    property int engineFaultLED: 0
 
+    // ------------ Only for debug purpose ------------------
+    Item {
+        focus: true
+        Keys.onPressed: (event) => {
+            if (event.key === Qt.Key_1) oilTemperatureLED = 1;
+            if (event.key === Qt.Key_2) oilTemperatureLED = 0;
+            if (event.key === Qt.Key_3) engineFaultLED = 1;
+            if (event.key === Qt.Key_4) engineFaultLED = 0;
+        }
+    }
+    // --------------------------------------------------------
 
-    property int localTrafficLightState: 0
-    property int remoteTrafficLightState: 0
+    component Needle : Image {
+        id: needleImage
+        property real value: 0
+        property real minValue: 0
+        property real maxValue: 100
+        property real startAngle: -130
+        property real endAngle: 130
 
-    property int localTimer: 5
-    property int remoteTimer: 0
+        fillMode: Image.PreserveAspectFit
+        antialiasing: true
+        smooth: true
 
-    Rectangle {
-        id: container
-        anchors.centerIn: parent
-        width: layoutRow.width + 40
-        height: layoutRow.height + 40
-        color: "#333333"
-        radius: 15
-        border.color: "black"
-        border.width: 2
+        property real currentAngle: {
+            let ratio = (Math.max(minValue, Math.min(maxValue, value)) - minValue) / (maxValue - minValue);
+            return startAngle + (ratio * (endAngle - startAngle));
+        }
 
-        Row {
-            id: layoutRow
+        transform: Rotation {
+            origin.x: needleImage.width / 2
+            origin.y: needleImage.height * 0.869
+            angle: needleImage.currentAngle
+        }
+
+        Behavior on currentAngle {
+            SpringAnimation {
+                spring: 0.5
+                damping: 0.9
+                mass: 1.2
+                epsilon: 0.25
+            }
+        }
+    }
+
+    Image {
+        id: dashboard
+        source: "Dashboard3.png"
+        anchors.fill: parent
+        anchors.margins: 20
+        fillMode: Image.PreserveAspectFit
+
+        Item {
+            id: drawingArea
             anchors.centerIn: parent
-            spacing: 50
+            width: dashboard.paintedWidth
+            height: dashboard.paintedHeight
 
-            // --- LOCAL TRAFFIC LIGHT ---
-            Column {
-                spacing: 20
+            // LEDs section
+            Image {
+                id: oilLight
+                x: drawingArea.width * 0.45 - width / 2
+                y: drawingArea.height * 0.40 - height / 2
+                width: drawingArea.width * 0.11
+                height: drawingArea.height * 0.14
+                fillMode: Image.PreserveAspectFit
+                source: oilTemperatureLED === 1 ? "Led_oil_on_r.png" : "LED_oil_off_r.png"
+            }
 
-                Text {
-                    id: localTimerLabel
-                    text: localTimer
-                    color: "#FF4500"
-                    font.family: "Monospace"
-                    font.pixelSize: 30
-                    font.bold: true
-                    style: Text.Outline
-                    styleColor: "black"
+            Image {
+                id: engineLight
+                x: drawingArea.width * 0.55 - width / 2
+                y: drawingArea.height * 0.40 - height / 2
+                width: drawingArea.width * 0.14
+                height: drawingArea.height * 0.14
+                fillMode: Image.PreserveAspectFit
+                source: engineFaultLED === 1 ? "led_engine_on_r.png" : "led_engine_off_r.png"
+            }
+
+            // rpm
+            Item {
+                x: drawingArea.width * 0.191
+                y: drawingArea.height * 0.60
+                width: 1; height: 1
+                Needle {
+                    source: "needle_red.png"
+                    height: dashboard.paintedHeight * 0.29
+                    anchors.centerIn: parent
+                    anchors.verticalCenterOffset: -height * 0.369
+                    minValue: 0
+                    maxValue: 80
                 }
-
-                Rectangle { width: 80; height: 80; radius: 40; color: localTrafficLightState === red_state ? "red" : "darkred" }
-                Rectangle { width: 80; height: 80; radius: 40; color: localTrafficLightState === yellow_state ? "yellow" : "#666600" }
-                Rectangle { width: 80; height: 80; radius: 40; color: localTrafficLightState === green_state ? "green" : "darkgreen" }
             }
 
-            // --- REMOTE TRAFFIC LIGHT ---
-            Column {
-                spacing: 20
-
-                Text {
-                    id: remoteTimerLabel
-                    text: remoteTimer
-                    color: "#00FF00"
-                    font.family: "Monospace"
-                    font.pixelSize: 30
-                    font.bold: true
-                    style: Text.Outline
-                    styleColor: "black"
+            // speed
+            Item {
+                x: drawingArea.width * 0.809
+                y: drawingArea.height * 0.602
+                width: 1; height: 1
+                Needle {
+                    source: "needle_white.png"
+                    height: dashboard.paintedHeight * 0.29
+                    anchors.centerIn: parent
+                    anchors.verticalCenterOffset: -height * 0.369
+                    minValue: 0
+                    maxValue: 240
                 }
-
-                Rectangle { width: 80; height: 80; radius: 40; color: remoteTrafficLightState === red_state ? "red" : "darkred" }
-                Rectangle { width: 80; height: 80; radius: 40; color: remoteTrafficLightState === yellow_state ? "yellow" : "#666600" }
-                Rectangle { width: 80; height: 80; radius: 40; color: remoteTrafficLightState === green_state ? "green" : "darkgreen" }
             }
         }
     }
 
-    Timer {
-        id: local_traffic_light
-        interval: getInterval();
-        running: true
-        repeat: true
-
-        onTriggered: {
-            switch(localTrafficLightState) {
-                case red_state:
-                    localTrafficLightState = green_state; // red -> green
-                    break;
-                case yellow_state:
-                    localTrafficLightState = red_state; // yellow -> red
-                    break;
-                case green_state:
-                    localTrafficLightState = yellow_state; // green -> yellow
-                    break;
-            }
-            localTimer = getInterval() / 1000;
-        }
-    }
-
-    Timer {
-        id: countdown_local
-        interval: 1000
-        running: true
-        repeat: true
-        onTriggered: {
-            if (localTimer > 0) localTimer--;
-            if (remoteTimer > 0) remoteTimer--;
-        }
-
-    }
-
-    /**
-    * @brief Helper function to determine the duration of each light phase.
-    * @return int Interval in milliseconds.
-    */
-    function getInterval() {
-        if (localTrafficLightState === red_state) return red_light;
-        if (localTrafficLightState === yellow_state) return yellow_light;
-        if (localTrafficLightState === green_state) return green_light;
-        return delay;
-    }
-
-    Connections{
+    Connections {
         target: messageBus
-
-        /**
-        * @handler onStateColorChanged
-        * @brief Updates the remote Traffic Light based on signals from the bus.
-        * @param color String representing the new state ("red", "yellow", "green").
-         @param time Int representing the time for the actual state
-        */
-        function onStateColorChanged(color, time) {
-            console.log("Color received: " + color)
-            console.log("Time received: " + time)
-
-            if(color === "green") remoteTrafficLightState = green_state;
-            else if (color === "yellow") remoteTrafficLightState = yellow_state;
-            else if (color === "red") remoteTrafficLightState = red_state;
-            else console.log(color + " is not a valid command")
-
-            remoteTimer = time;
+        function onStateOilTemperature(OilState) {
+            console.log("Flag received: " + OilState)
+            if(OilState === 0) oilTemperatureLED = 0;
+            else if (OilState === 1) oilTemperatureLED = 1;
+        }
+        function onStateEngineFault(engineFault) {
+            console.log("Flag received: " + engineFault)
+            if(engineFault === 0) engineFaultLED = 0;
+            else if (engineFault === 1) engineFaultLED = 1;
         }
     }
 }
-
-
-

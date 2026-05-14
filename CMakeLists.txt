@@ -26,11 +26,20 @@ qt_add_qml_module(appsemaphore
     QML_FILES
     TrafficLightView.qml
     SOURCES
-        MqttHandler.cpp
-        MqttHandler.h
-        SOURCES IMessageBus.h
+
+
+    SOURCES
         SOURCES RPMsgHandler.h
         SOURCES RPMsgHandler.cpp
+    RESOURCES
+        Dashboard3.png
+        Dashboard4.png
+        needle_red.png
+        needle_white.png
+        Led_oil_on_r.png
+        LED_oil_off_r.png
+        led_engine_off_r.png
+        led_engine_on_r.png
 )
 
 # Qt for iOS sets MACOSX_BUNDLE_GUI_IDENTIFIER automatically since Qt 6.1.

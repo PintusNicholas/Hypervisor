@@ -6,19 +6,15 @@
 #include <QGuiApplication>
 #include <QQmlApplicationEngine>
 #include <QQmlContext>
-#include "MqttHandler.h"
 #include "RPMsgHandler.h"
-#include "IMessageBus.h"
 
 int main(int argc, char *argv[])
 {
     QGuiApplication app(argc, argv);
-    //MqttHandler mqttHandler;
     RPMsgHandler rpmsgHandler;
 
     QQmlApplicationEngine engine;
 
-    //engine.rootContext()->setContextProperty("messageBus", &mqttHandler);
     engine.rootContext()->setContextProperty("messageBus", &rpmsgHandler);
 
     QObject::connect(

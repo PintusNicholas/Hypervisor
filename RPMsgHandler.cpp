@@ -1,71 +1,53 @@
 /**
- * @brief Constructor for the RPMsgHandler class.
- * * Initializes the QLocalSocket and attempts to establish a connection with the
- * VirtualBox Named Pipe. It also sets up the event-driven signal-slot
- * connections for handling the lifecycle of the communication.
+ * @file RPMsgHandler.cpp
+ * @brief Implementation of the RPMsgHandler class for handling Remote Processor Messaging (RPMsg).
+ *
+ * This file contains the logic for opening the RPMsg device, monitoring it for incoming
+ * data using QSocketNotifier, and parsing the raw byte stream into CAN frame structures.
  */
 
 #include "RPMsgHandler.h"
-#include <QFile>
-#include <QString>
+#include <QSocketNotifier>
 #include <QDebug>
 
-const QString SHARED_FILE_PATH = "C:/Users/perdar/Desktop/stati_semaforo/stato.txt";
-
 /**
- * @brief Constructor for RPMsgHandler.
- * * Initializes the QLocalSocket and attempts to connect to the Windows Named Pipe
- * created by VirtualBox. It also sets up signals and slots for connection
- * status and data reception.
+ * @brief The path to the raw RPMsg character device.
  */
+const QString RPMSG_PATH = "/dev/rpmsg_raw";
+
 RPMsgHandler::RPMsgHandler(QObject *parent) : QObject(parent) {
-    m_socket = new QLocalSocket(this);
-    m_socket->connectToServer("\\\\.\\pipe\\semaforo_rpmsg");
+    m_rpmsg.setFileName(RPMSG_PATH);
 
-    connect(m_socket, &QLocalSocket::connected, [] () {
-        qDebug() << "Successfully connected to a Pipe";
-    });
+    if(!m_rpmsg.open(QIODevice::ReadOnly)) {
+        qDebug() << "ERROR: Impossible open RPMSG: " << RPMSG_PATH;
+        //return;
+    }
 
-    connect(m_socket, &QLocalSocket::readyRead, this, [=] () {
-        QString flag = m_socket->readAll();
-        qDebug() << "Flag received: " << flag;
+    // Monitor the file handle for Read activity
+    QSocketNotifier *notify = new QSocketNotifier(m_rpmsg.handle(), QSocketNotifier::Read, this);
+    connect(notify, &QSocketNotifier::activated, this, &RPMsgHandler::handleReadyRead);
 
-
-        QFile file(SHARED_FILE_PATH);
-        if(flag == '1') {
-            if(file.open(QIODevice::ReadOnly | QIODevice::Text)) {
-                QTextStream in (&file);
-                QString state = in.readAll().trimmed();
-                file.close();
-
-                qDebug() << "Command received: " << state;
-                receive(state);
-            }
-        } else printf("flag not valid\n");
-    });
+    qDebug() << "Ready";
 }
 
 /**
- * @brief Processes and emits the cleaned color command.
- * * Log the incoming command for debugging purposes and notifies the QML/UI
- * layer via the stateColorChanged signal.
- * * @param message The cleaned string command (e.g., "red", "yellow", "green").
+ * @brief Slot triggered when data is available on the RPMsg device.
+ *
+ * Reads all available bytes from the device. If the data size matches or exceeds
+ * the expected CAN frame structure, it casts the raw data and emits signals
+ * representing the engine fault and oil temperature states.
  */
-void RPMsgHandler::receive(const QString &message) {
-    QStringList comand = message.split("|");
-    QString color = comand[0].trimmed();
-    int time = comand[1].trimmed().toInt();
-    qDebug() << "Command from Pipe received: " << message;
-    emit stateColorChanged(color, time);
-}
+void RPMsgHandler::handleReadyRead() {
+    QByteArray rawData = m_rpmsg.readAll();
 
-/**
- * @brief Interface implementation for sending messages.
- * * Currently acts as a placeholder as the current implementation focuses
- * on unidirectional communication (Linux to Windows).
- * * @param topic The message category.
- * @param message The content to be sent.
- */
-void RPMsgHandler::send(const QString &topic, const QString &message) {
-    return;
+    if(rawData.size() < sizeof(rpmsg_can_frame_t)) {
+        //return;
+    }
+
+    // Cast the raw data buffer to the CAN frame structure
+    const rpmsg_can_frame_t *frame = reinterpret_cast<const rpmsg_can_frame_t*>(rawData.constData());
+
+    // Emit parsed states to the UI or other handlers
+    emit stateEngineFault(frame->engine_fault);
+    emit stateOilTemperature(frame->oil_temperature);
 }
